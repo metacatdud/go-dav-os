@@ -4,6 +4,7 @@ AS       := $(CROSS)-as
 GCC      := $(CROSS)-gcc
 GCCGO    := $(CROSS)-gccgo
 OBJCOPY  := $(CROSS)-objcopy
+GRUB_CFG      := iso/grub/grub.cfg
 
 GRUBMKRESCUE  := grub-mkrescue
 QEMU          := qemu-system-i386
@@ -104,9 +105,9 @@ $(KERNEL_ELF): $(BOOT_OBJ) $(TERMINAL_OBJ) $(KEYBOARD_OBJ) $(KERNEL_OBJ) $(LINKE
 $(ISO_DIR)/boot/grub:
 	mkdir -p $(ISO_DIR)/boot/grub
 
-$(ISO_DIR)/boot/kernel.elf: $(KERNEL_ELF) | $(ISO_DIR)/boot/grub
+$(ISO_DIR)/boot/kernel.elf: $(KERNEL_ELF) $(GRUB_CFG) | $(ISO_DIR)/boot/grub
 	cp $(KERNEL_ELF) $(ISO_DIR)/boot/kernel.elf
-	cp iso/grub/grub.cfg $(ISO_DIR)/boot/grub/grub.cfg
+	cp $(GRUB_CFG) $(ISO_DIR)/boot/grub/grub.cfg
 
 $(ISO_IMAGE): $(ISO_DIR)/boot/kernel.elf
 	$(GRUBMKRESCUE) -o $(ISO_IMAGE) $(ISO_DIR)
