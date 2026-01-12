@@ -1,4 +1,4 @@
-CROSS    ?= i686-elf
+CROSS    ?= x86_64-elf
 
 AS       := $(CROSS)-as
 GCC      := $(CROSS)-gcc
@@ -7,7 +7,7 @@ OBJCOPY  := $(CROSS)-objcopy
 GRUB_CFG      := iso/grub/grub.cfg
 
 GRUBMKRESCUE  := grub-mkrescue
-QEMU          := qemu-system-i386
+QEMU          := qemu-system-x86_64
 
 DOCKER_PLATFORM := linux/amd64
 DOCKER_IMAGE    := go-dav-os-toolchain
