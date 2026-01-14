@@ -26,7 +26,7 @@ func readU32(addr uintptr) uint32 {
 
 // InitMultiboot initializes the memory map from the Multiboot info structure
 // Returns true if the memory map is valid, false otherwise
-func InitMultiboot(mbInfoAddr uint32) bool {
+func InitMultiboot(mbInfoAddr uint64) bool {
 	// reset the memory map counter
 	mmapCount = 0
 

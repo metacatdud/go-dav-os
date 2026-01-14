@@ -9,22 +9,22 @@ var __kernel_end byte
 
 var (
 	pfaReady    bool
-	totalPages  uint32
-	freePages   uint32
-	bitmapPhys  uint32 // Physical address of the bitmap
-	bitmapBytes uint32
-	scanStart   uint32 // First page index to start scanning from
+	totalPages  uint64
+	freePages   uint64
+	bitmapPhys  uint64 // Physical address of the bitmap
+	bitmapBytes uint64
+	scanStart   uint64 // First page index to start scanning from
 )
 
-func kernelEndPhys() uint32 {
-	return uint32(uintptr(unsafe.Pointer(&__kernel_end)))
+func kernelEndPhys() uint64 {
+	return uint64(uintptr(unsafe.Pointer(&__kernel_end)))
 }
 
-func alignUp(v, a uint32) uint32 {
+func alignUp(v, a uint64) uint64 {
 	return (v + (a - 1)) & ^(a - 1)
 }
 
-func alignDown(v, a uint32) uint32 {
+func alignDown(v, a uint64) uint64 {
 	return v & ^(a - 1)
 }
 
@@ -50,19 +50,19 @@ func maxAvailableEnd() uint64 {
 	return max
 }
 
-func bitmapBytePtr(off uint32) *byte {
+func bitmapBytePtr(off uint64) *byte {
 	// assumes identity mapping / paging off: physical == directly addressable pointer
 	return (*byte)(unsafe.Pointer(uintptr(bitmapPhys) + uintptr(off)))
 }
 
-func bitmapGet(page uint32) bool {
+func bitmapGet(page uint64) bool {
 	byteIdx := page >> 3
 	bit := byte(1 << (page & 7))
 	b := *bitmapBytePtr(byteIdx)
 	return (b & bit) != 0
 }
 
-func bitmapSet(page uint32, used bool) {
+func bitmapSet(page uint64, used bool) {
 	byteIdx := page >> 3
 	bit := byte(1 << (page & 7))
 	p := bitmapBytePtr(byteIdx)
@@ -74,7 +74,7 @@ func bitmapSet(page uint32, used bool) {
 	}
 }
 
-func markFreeRange(startPhys, endPhys uint32) {
+func markFreeRange(startPhys, endPhys uint64) {
 	// marks pages as free inside [startPhys, endPhys)
 	if endPhys <= startPhys {
 		return
@@ -95,7 +95,7 @@ func markFreeRange(startPhys, endPhys uint32) {
 	}
 }
 
-func markUsedRange(startPhys, endPhys uint32) {
+func markUsedRange(startPhys, endPhys uint64) {
 	// marks pages as used inside [startPhys, endPhys)
 	if endPhys <= startPhys {
 		return
@@ -128,7 +128,7 @@ func InitPFA() bool {
 	}
 
 	// manage up to the highest "available" end address
-	totalPages = uint32((maxEnd + (pageSize - 1)) / pageSize)
+	totalPages = (maxEnd + (pageSize - 1)) / pageSize
 	if totalPages == 0 {
 		return false
 	}
@@ -144,7 +144,7 @@ func InitPFA() bool {
 	bitmapEnd := bitmapPhys + bitmapPages*pageSize
 
 	// start with everything marked as used
-	for i := uint32(0); i < bitmapBytes; i++ {
+	for i := uint64(0); i < bitmapBytes; i++ {
 		*bitmapBytePtr(i) = 0xFF
 	}
 
@@ -160,8 +160,8 @@ func InitPFA() bool {
 			continue
 		}
 
-		start := e.baseLo
-		end := e.baseLo + e.lenLo
+		start := uint64(e.baseLo)
+		end := uint64(e.baseLo) + uint64(e.lenLo)
 		markFreeRange(start, end)
 	}
 
@@ -178,11 +178,11 @@ func InitPFA() bool {
 
 func PFAReady() bool { return pfaReady }
 
-func TotalPages() uint32 { return totalPages }
-func FreePages() uint32  { return freePages }
-func UsedPages() uint32  { return totalPages - freePages }
+func TotalPages() uint64 { return totalPages }
+func FreePages() uint64  { return freePages }
+func UsedPages() uint64  { return totalPages - freePages }
 
-func AllocPage() uint32 {
+func AllocPage() uint64 {
 	// returns a physical address of a 4KB page, or 0 on failure
 	if !pfaReady {
 		return 0
@@ -201,7 +201,7 @@ func AllocPage() uint32 {
 	return 0
 }
 
-func FreePage(addr uint32) bool {
+func FreePage(addr uint64) bool {
 	// frees a page previously returned by AllocPage
 	if !pfaReady {
 		return false
