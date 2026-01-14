@@ -33,3 +33,6 @@ go.work.sum
 
 #build directory
 build/
+
+# Project files
+qemu.log
