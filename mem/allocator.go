@@ -155,13 +155,8 @@ func InitPFA() bool {
 			continue
 		}
 
-		// for now, only support regions below 4GiB
-		if e.baseHi != 0 || e.lenHi != 0 {
-			continue
-		}
-
-		start := uint64(e.baseLo)
-		end := uint64(e.baseLo) + uint64(e.lenLo)
+		start := u64FromHiLo(e.baseHi, e.baseLo)
+		end := start + u64FromHiLo(e.lenHi, e.lenLo)
 		markFreeRange(start, end)
 	}
 
