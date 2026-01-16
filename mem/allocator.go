@@ -4,8 +4,8 @@ import "unsafe"
 
 const pageSize = 4096
 
-// __kernel_end is the first free physical byte after the kernel
-var __kernel_end byte
+func bootstrapEnd() uint64
+func kernelEnd() uint64
 
 var (
 	pfaReady    bool
@@ -17,7 +17,12 @@ var (
 )
 
 func kernelEndPhys() uint64 {
-	return uint64(uintptr(unsafe.Pointer(&__kernel_end)))
+	kend := kernelEnd()
+	bend := bootstrapEnd()
+	if bend > kend {
+		return bend
+	}
+	return kend
 }
 
 func alignUp(v, a uint64) uint64 {
@@ -34,7 +39,7 @@ func u64FromHiLo(hi, lo uint32) uint64 {
 
 func maxAvailableEnd() uint64 {
 	// returns the highest end address among all available (type=1) regions
-	var max uint64
+	var maxEnd uint64
 	for i := 0; i < mmapCount; i++ {
 		e := mmapEntries[i]
 		if e.typ != 1 {
@@ -43,11 +48,11 @@ func maxAvailableEnd() uint64 {
 		base := u64FromHiLo(e.baseHi, e.baseLo)
 		l := u64FromHiLo(e.lenHi, e.lenLo)
 		end := base + l
-		if end > max {
-			max = end
+		if end > maxEnd {
+			maxEnd = end
 		}
 	}
-	return max
+	return maxEnd
 }
 
 func bitmapBytePtr(off uint64) *byte {
@@ -135,9 +140,35 @@ func InitPFA() bool {
 
 	bitmapBytes = (totalPages + 7) / 8
 
-	// place bitmap right after the kernel end, aligned to 4KB
+	// place bitmap inside a usable memory region
 	kend := kernelEndPhys()
-	bitmapPhys = alignUp(kend, pageSize)
+	bitmapPhys = 0
+	for i := 0; i < mmapCount; i++ {
+		e := mmapEntries[i]
+		if e.typ != 1 {
+			continue
+		}
+		base := u64FromHiLo(e.baseHi, e.baseLo)
+		end := base + u64FromHiLo(e.lenHi, e.lenLo)
+
+		if end <= base || end <= kend {
+			continue
+		}
+
+		start := base
+		if start < kend {
+			start = kend
+		}
+		start = alignUp(start, pageSize)
+		if start+bitmapBytes <= end {
+			bitmapPhys = start
+			break
+		}
+	}
+	if bitmapPhys == 0 {
+		// fallback to just after the kernel end
+		bitmapPhys = alignUp(kend, pageSize)
+	}
 
 	// reserve full pages for the bitmap
 	bitmapPages := alignUp(bitmapBytes, pageSize) / pageSize

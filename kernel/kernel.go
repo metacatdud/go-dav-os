@@ -4,6 +4,7 @@ import (
 	"github.com/dmarro89/go-dav-os/fs"
 	"github.com/dmarro89/go-dav-os/kernel/scheduler"
 	"github.com/dmarro89/go-dav-os/keyboard"
+	"github.com/dmarro89/go-dav-os/mem"
 	"github.com/dmarro89/go-dav-os/shell"
 	"github.com/dmarro89/go-dav-os/terminal"
 )
@@ -28,9 +29,9 @@ func Main(multibootInfoAddr uint64) {
 
 	shell.SetTickProvider(GetTicks)
 
-	// TODO(amd64): Multiboot2 parsing + PFA not ported. Uncomment these when done
-	// mem.InitMultiboot(multibootInfoAddr)
-	// mem.InitPFA()
+	if mem.InitMultiboot(multibootInfoAddr) {
+		mem.InitPFA()
+	}
 
 	scheduler.Init()
 

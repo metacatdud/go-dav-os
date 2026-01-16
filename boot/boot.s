@@ -68,8 +68,19 @@ pml4:
 pdpt:
 	.skip 4096
 .align 4096
-pd:
+pd0:
 	.skip 4096
+.align 4096
+pd1:
+	.skip 4096
+.align 4096
+pd2:
+	.skip 4096
+.align 4096
+pd3:
+	.skip 4096
+.global __bootstrap_end
+__bootstrap_end:
 
 .align 4
 multiboot_info_ptr:
@@ -117,7 +128,7 @@ _start:
 .size _start, . - _start
 
 setup_long_mode:
-# Build minimal identity-mapped paging (1 GiB via 2 MiB pages).
+# Build minimal identity-mapped paging (4 GiB via 2 MiB pages).
 	lea pml4, %edi
 	movl $pdpt, %eax
 	orl $0x03, %eax
@@ -125,25 +136,88 @@ setup_long_mode:
 	movl $0, 4(%edi)
 
 	lea pdpt, %edi
-	movl $pd, %eax
+	movl $pd0, %eax
 	orl $0x03, %eax
 	movl %eax, (%edi)
 	movl $0, 4(%edi)
+	movl $pd1, %eax
+	orl $0x03, %eax
+	movl %eax, 8(%edi)
+	movl $0, 12(%edi)
+	movl $pd2, %eax
+	orl $0x03, %eax
+	movl %eax, 16(%edi)
+	movl $0, 20(%edi)
+	movl $pd3, %eax
+	orl $0x03, %eax
+	movl %eax, 24(%edi)
+	movl $0, 28(%edi)
 
-	lea pd, %edi
-	xorl %ecx, %ecx
 	movl $0x83, %edx           # present|rw|ps
 
-.Lmap_2m:
+	lea pd0, %edi
+	xorl %ecx, %ecx
+	movl $0x00000000, %ebx
+
+.Lmap_2m_pd0:
 	movl %ecx, %eax
 	shll $21, %eax             # ecx * 2 MiB
+	addl %ebx, %eax
 	orl %edx, %eax
 	movl %eax, (%edi)
 	movl $0, 4(%edi)
 	addl $8, %edi
 	incl %ecx
 	cmpl $512, %ecx
-	jne .Lmap_2m
+	jne .Lmap_2m_pd0
+
+	lea pd1, %edi
+	xorl %ecx, %ecx
+	movl $0x40000000, %ebx
+
+.Lmap_2m_pd1:
+	movl %ecx, %eax
+	shll $21, %eax
+	addl %ebx, %eax
+	orl %edx, %eax
+	movl %eax, (%edi)
+	movl $0, 4(%edi)
+	addl $8, %edi
+	incl %ecx
+	cmpl $512, %ecx
+	jne .Lmap_2m_pd1
+
+	lea pd2, %edi
+	xorl %ecx, %ecx
+	movl $0x80000000, %ebx
+
+.Lmap_2m_pd2:
+	movl %ecx, %eax
+	shll $21, %eax
+	addl %ebx, %eax
+	orl %edx, %eax
+	movl %eax, (%edi)
+	movl $0, 4(%edi)
+	addl $8, %edi
+	incl %ecx
+	cmpl $512, %ecx
+	jne .Lmap_2m_pd2
+
+	lea pd3, %edi
+	xorl %ecx, %ecx
+	movl $0xC0000000, %ebx
+
+.Lmap_2m_pd3:
+	movl %ecx, %eax
+	shll $21, %eax
+	addl %ebx, %eax
+	orl %edx, %eax
+	movl %eax, (%edi)
+	movl $0, 4(%edi)
+	addl $8, %edi
+	incl %ecx
+	cmpl $512, %ecx
+	jne .Lmap_2m_pd3
 
 # Load PML4 and enable PAE.
 	movl $pml4, %eax

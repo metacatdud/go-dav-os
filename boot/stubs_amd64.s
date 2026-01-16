@@ -57,6 +57,22 @@ github_0com_1dmarro89_1go_x2ddav_x2dos_1keyboard.outb:
 	ret
 .size github_0com_1dmarro89_1go_x2ddav_x2dos_1keyboard.outb, . - github_0com_1dmarro89_1go_x2ddav_x2dos_1keyboard.outb
 
+# github.com/dmarro89/go-dav-os/mem.bootstrapEnd() uint64
+.global github_0com_1dmarro89_1go_x2ddav_x2dos_1mem.bootstrapEnd
+.type   github_0com_1dmarro89_1go_x2ddav_x2dos_1mem.bootstrapEnd, @function
+github_0com_1dmarro89_1go_x2ddav_x2dos_1mem.bootstrapEnd:
+	leaq __bootstrap_end(%rip), %rax
+	ret
+.size github_0com_1dmarro89_1go_x2ddav_x2dos_1mem.bootstrapEnd, . - github_0com_1dmarro89_1go_x2ddav_x2dos_1mem.bootstrapEnd
+
+# github.com/dmarro89/go-dav-os/mem.kernelEnd() uint64
+.global github_0com_1dmarro89_1go_x2ddav_x2dos_1mem.kernelEnd
+.type   github_0com_1dmarro89_1go_x2ddav_x2dos_1mem.kernelEnd, @function
+github_0com_1dmarro89_1go_x2ddav_x2dos_1mem.kernelEnd:
+	leaq __kernel_end(%rip), %rax
+	ret
+.size github_0com_1dmarro89_1go_x2ddav_x2dos_1mem.kernelEnd, . - github_0com_1dmarro89_1go_x2ddav_x2dos_1mem.kernelEnd
+
 # github.com/dmarro89/go-dav-os/serial.inb(port uint16) byte
 .global github_0com_1dmarro89_1go_x2ddav_x2dos_1serial.inb
 .type   github_0com_1dmarro89_1go_x2ddav_x2dos_1serial.inb, @function
