@@ -409,16 +409,22 @@ func printUint(v uint64) {
 		terminal.PutRune('0')
 		return
 	}
-
-	var buf [20]byte
-	i := 20
-	for v > 0 {
-		i--
-		buf[i] = byte('0' + (v % 10))
-		v /= 10
+	if (v >> 32) != 0 {
+		terminal.Print("0x")
+		printHexU64(v)
+		return
 	}
 
-	for j := i; j < 20; j++ {
+	u := uint32(v)
+	var buf [10]byte
+	i := 10
+	for u > 0 {
+		i--
+		buf[i] = byte('0' + (u % 10))
+		u /= 10
+	}
+
+	for j := i; j < 10; j++ {
 		terminal.PutRune(rune(buf[j]))
 	}
 }
